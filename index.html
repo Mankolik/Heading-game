@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Heading Slingshot</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="game" aria-live="polite">
+      <h1>Heading Slingshot</h1>
+      <p class="subtitle">Pull opposite the target heading and release.</p>
+
+      <section class="hud" aria-label="Round details">
+        <p class="heading-label">Target Heading</p>
+        <p id="targetHeading" class="heading-value">000°</p>
+      </section>
+
+      <section class="playfield-wrap">
+        <div id="playfield" class="playfield" role="application" aria-label="Drag the aircraft opposite target heading">
+          <div class="crosshair" aria-hidden="true"></div>
+          <div id="vector" class="vector" aria-hidden="true"></div>
+          <button id="aircraft" class="aircraft" aria-label="Aircraft handle" type="button">
+            ▲
+          </button>
+        </div>
+      </section>
+
+      <section class="status" aria-live="polite">
+        <p id="feedback">Drag the arrow opposite the heading and release.</p>
+        <p id="stats">Score: 0 | Round: 1</p>
+      </section>
+
+      <div class="actions">
+        <button id="nextRound" type="button">Skip / New Heading</button>
+      </div>
+    </main>
+
+    <script src="app.js"></script>
+  </body>
+</html>
