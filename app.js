@@ -33,7 +33,7 @@ const pullBearingFromDelta = (dx, dy) => {
 };
 
 const resetAircraft = () => {
-  aircraft.style.transform = 'translate(0px, 0px)';
+  aircraft.style.transform = 'translate(0px, 0px) rotate(0rad)';
   vector.style.height = '0px';
 };
 
@@ -88,9 +88,10 @@ const updatePull = (clientX, clientY) => {
     dy *= ratio;
   }
 
-  aircraft.style.transform = `translate(${dx}px, ${dy}px)`;
-
   const length = Math.hypot(dx, dy);
+  const rotation = length > 0 ? Math.atan2(-dy, -dx) + Math.PI / 2 : 0;
+  aircraft.style.transform = `translate(${dx}px, ${dy}px) rotate(${rotation}rad)`;
+
   const angle = Math.atan2(dy, dx) + Math.PI / 2;
   vector.style.height = `${length}px`;
   vector.style.transform = `translate(-50%, -100%) rotate(${angle}rad)`;
