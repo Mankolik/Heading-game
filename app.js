@@ -13,6 +13,7 @@ const state = {
   dragging: false,
   maxPull: 110,
   returnAnimationFrame: null,
+  lockedRotation: null,
 };
 
 const springConfig = {
@@ -39,9 +40,9 @@ const pullBearingFromDelta = (dx, dy) => {
   return normalize((radians * 180) / Math.PI);
 };
 
-const drawAircraft = (dx, dy) => {
+const drawAircraft = (dx, dy, { rotationOverride = null } = {}) => {
   const length = Math.hypot(dx, dy);
-  const rotation = length > 0 ? Math.atan2(-dy, -dx) + Math.PI / 2 : 0;
+  const rotation = rotationOverride ?? (length > 0 ? Math.atan2(-dy, -dx) + Math.PI / 2 : 0);
   aircraft.style.transform = `translate(${dx}px, ${dy}px) rotate(${rotation}rad)`;
 
   const angle = Math.atan2(dy, dx) + Math.PI / 2;
@@ -58,6 +59,7 @@ const stopReturnAnimation = () => {
 
 const resetAircraft = () => {
   stopReturnAnimation();
+  state.lockedRotation = null;
   drawAircraft(0, 0);
 };
 
@@ -82,11 +84,11 @@ const animateReturnToCenter = (startDx, startDy) => {
     dx += vx;
     dy += vy;
 
-    drawAircraft(dx, dy);
+    drawAircraft(dx, dy, { rotationOverride: state.lockedRotation });
 
     const motion = Math.hypot(dx, dy) + Math.hypot(vx, vy);
     if (motion < springConfig.jitterCutoff) {
-      drawAircraft(0, 0);
+      drawAircraft(0, 0, { rotationOverride: state.lockedRotation });
       state.returnAnimationFrame = null;
       return;
     }
@@ -155,6 +157,7 @@ const updatePull = (clientX, clientY) => {
 };
 
 const finishPull = (dx, dy, length) => {
+  state.lockedRotation = length > 0 ? Math.atan2(-dy, -dx) + Math.PI / 2 : state.lockedRotation;
   animateReturnToCenter(dx, dy);
 
   if (length < 20) {
@@ -194,6 +197,7 @@ const pointerUp = (event) => {
 
 aircraft.addEventListener('pointerdown', (event) => {
   state.dragging = true;
+  state.lockedRotation = null;
   stopReturnAnimation();
   aircraft.setPointerCapture(event.pointerId);
   lastPull = updatePull(event.clientX, event.clientY);
