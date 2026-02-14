@@ -120,15 +120,20 @@ h1 {
   height: 64px;
   margin-left: -32px;
   margin-top: -32px;
-  border-radius: 50%;
-  border: 2px solid #3a578f;
-  background: radial-gradient(circle at 30% 30%, #2f4f85, #1b2e50);
-  color: #e4f1ff;
-  font-size: 1.55rem;
+  border: 0;
+  background: transparent;
+  padding: 0;
   line-height: 1;
-  box-shadow: 0 10px 22px rgb(0 0 0 / 35%);
   cursor: grab;
   user-select: none;
+}
+
+.aircraft img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  pointer-events: none;
+  filter: drop-shadow(0 10px 22px rgb(0 0 0 / 35%));
 }
 
 .aircraft:active {

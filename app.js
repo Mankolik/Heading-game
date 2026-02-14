@@ -56,7 +56,7 @@ const startRound = ({ keepRound = false } = {}) => {
   setHeading();
   resetAircraft();
   setFeedbackClass('');
-  feedback.textContent = 'Drag the arrow opposite the heading and release.';
+  feedback.textContent = 'Drag the plane opposite the heading and release.';
   updateStats();
 };
 
