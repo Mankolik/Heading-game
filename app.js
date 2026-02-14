@@ -12,6 +12,13 @@ const state = {
   round: 1,
   dragging: false,
   maxPull: 110,
+  returnAnimationFrame: null,
+};
+
+const springConfig = {
+  stiffness: 0.24,
+  damping: 0.82,
+  jitterCutoff: 0.12,
 };
 
 const center = () => {
@@ -32,9 +39,62 @@ const pullBearingFromDelta = (dx, dy) => {
   return normalize((radians * 180) / Math.PI);
 };
 
+const drawAircraft = (dx, dy) => {
+  const length = Math.hypot(dx, dy);
+  const rotation = length > 0 ? Math.atan2(-dy, -dx) + Math.PI / 2 : 0;
+  aircraft.style.transform = `translate(${dx}px, ${dy}px) rotate(${rotation}rad)`;
+
+  const angle = Math.atan2(dy, dx) + Math.PI / 2;
+  vector.style.height = `${length}px`;
+  vector.style.transform = `translate(-50%, -100%) rotate(${angle}rad)`;
+};
+
+const stopReturnAnimation = () => {
+  if (state.returnAnimationFrame) {
+    cancelAnimationFrame(state.returnAnimationFrame);
+    state.returnAnimationFrame = null;
+  }
+};
+
 const resetAircraft = () => {
-  aircraft.style.transform = 'translate(0px, 0px) rotate(0rad)';
-  vector.style.height = '0px';
+  stopReturnAnimation();
+  drawAircraft(0, 0);
+};
+
+const animateReturnToCenter = (startDx, startDy) => {
+  stopReturnAnimation();
+
+  let dx = startDx;
+  let dy = startDy;
+  let vx = -startDx * 0.18;
+  let vy = -startDy * 0.18;
+
+  const tick = () => {
+    if (state.dragging) {
+      stopReturnAnimation();
+      return;
+    }
+
+    vx += -dx * springConfig.stiffness;
+    vy += -dy * springConfig.stiffness;
+    vx *= springConfig.damping;
+    vy *= springConfig.damping;
+    dx += vx;
+    dy += vy;
+
+    drawAircraft(dx, dy);
+
+    const motion = Math.hypot(dx, dy) + Math.hypot(vx, vy);
+    if (motion < springConfig.jitterCutoff) {
+      drawAircraft(0, 0);
+      state.returnAnimationFrame = null;
+      return;
+    }
+
+    state.returnAnimationFrame = requestAnimationFrame(tick);
+  };
+
+  state.returnAnimationFrame = requestAnimationFrame(tick);
 };
 
 const setHeading = () => {
@@ -89,21 +149,17 @@ const updatePull = (clientX, clientY) => {
   }
 
   const length = Math.hypot(dx, dy);
-  const rotation = length > 0 ? Math.atan2(-dy, -dx) + Math.PI / 2 : 0;
-  aircraft.style.transform = `translate(${dx}px, ${dy}px) rotate(${rotation}rad)`;
-
-  const angle = Math.atan2(dy, dx) + Math.PI / 2;
-  vector.style.height = `${length}px`;
-  vector.style.transform = `translate(-50%, -100%) rotate(${angle}rad)`;
+  drawAircraft(dx, dy);
 
   return { dx, dy, length };
 };
 
 const finishPull = (dx, dy, length) => {
+  animateReturnToCenter(dx, dy);
+
   if (length < 20) {
     feedback.textContent = 'Pull farther before release.';
     setFeedbackClass('feedback-okay');
-    resetAircraft();
     return;
   }
 
@@ -118,7 +174,6 @@ const finishPull = (dx, dy, length) => {
   feedback.textContent = `${result.text} (Target pull: ${expectedPullBearing.toFixed(0)}°)`;
   updateStats();
 
-  resetAircraft();
 };
 
 let lastPull = { dx: 0, dy: 0, length: 0 };
@@ -139,6 +194,7 @@ const pointerUp = (event) => {
 
 aircraft.addEventListener('pointerdown', (event) => {
   state.dragging = true;
+  stopReturnAnimation();
   aircraft.setPointerCapture(event.pointerId);
   lastPull = updatePull(event.clientX, event.clientY);
 });
