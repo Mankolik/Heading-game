@@ -110,8 +110,11 @@ const setFeedbackClass = (name) => {
 };
 
 const updateStats = () => {
-  const { perfect, solid, close } = getErrorThresholds();
-  stats.textContent = `Score: ${state.score} | Round: ${state.round} | +3 ≤ ${perfect}°, +2 ≤ ${solid}°, +1 ≤ ${close}°`;
+  const { perfect, solidEnabled, solid } = getErrorThresholds();
+  const scoringText = solidEnabled
+    ? `+3 ≤ ${perfect}°, +2 ≤ ${solid}°`
+    : `+3 ≤ ${perfect}°`;
+  stats.textContent = `Score: ${state.score} | Round: ${state.round} | ${scoringText}`;
 };
 
 const startRound = ({ keepRound = false } = {}) => {
@@ -124,29 +127,29 @@ const startRound = ({ keepRound = false } = {}) => {
 };
 
 const pointsFromError = (errorDeg) => {
-  const { perfect, solid, close } = getErrorThresholds();
+  const { perfect, solidEnabled, solid } = getErrorThresholds();
   if (errorDeg <= perfect) return 3;
-  if (errorDeg <= solid) return 2;
-  if (errorDeg <= close) return 1;
+  if (solidEnabled && errorDeg <= solid) return 2;
   return 0;
 };
 
 const getErrorThresholds = () => {
+  const perfect = Math.max(3, 10 - Math.floor(state.score / 8));
+  const solidEnabled = state.score < 50;
   const tightenBy = Math.floor(state.score / 5);
 
   return {
-    perfect: Math.max(4, 10 - tightenBy),
+    perfect,
+    solidEnabled,
     solid: Math.max(12, 25 - tightenBy * 2),
-    close: Math.max(20, 40 - tightenBy * 2),
   };
 };
 
 const messageFromError = (errorDeg) => {
-  const { perfect, solid, close } = getErrorThresholds();
+  const { perfect, solidEnabled, solid } = getErrorThresholds();
 
   if (errorDeg <= perfect) return { text: `Perfect! ${errorDeg.toFixed(1)}° error. +3`, cls: 'feedback-good' };
-  if (errorDeg <= solid) return { text: `Solid pull. ${errorDeg.toFixed(1)}° error. +2`, cls: 'feedback-good' };
-  if (errorDeg <= close) return { text: `Close! ${errorDeg.toFixed(1)}° error. +1`, cls: 'feedback-okay' };
+  if (solidEnabled && errorDeg <= solid) return { text: `Solid pull. ${errorDeg.toFixed(1)}° error. +2`, cls: 'feedback-good' };
   return { text: `Missed by ${errorDeg.toFixed(1)}°. Pull more opposite next time.`, cls: 'feedback-bad' };
 };
 
