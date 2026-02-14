@@ -110,7 +110,8 @@ const setFeedbackClass = (name) => {
 };
 
 const updateStats = () => {
-  stats.textContent = `Score: ${state.score} | Round: ${state.round}`;
+  const { perfect, solid, close } = getErrorThresholds();
+  stats.textContent = `Score: ${state.score} | Round: ${state.round} | +3 ≤ ${perfect}°, +2 ≤ ${solid}°, +1 ≤ ${close}°`;
 };
 
 const startRound = ({ keepRound = false } = {}) => {
@@ -123,16 +124,29 @@ const startRound = ({ keepRound = false } = {}) => {
 };
 
 const pointsFromError = (errorDeg) => {
-  if (errorDeg <= 10) return 3;
-  if (errorDeg <= 25) return 2;
-  if (errorDeg <= 40) return 1;
+  const { perfect, solid, close } = getErrorThresholds();
+  if (errorDeg <= perfect) return 3;
+  if (errorDeg <= solid) return 2;
+  if (errorDeg <= close) return 1;
   return 0;
 };
 
+const getErrorThresholds = () => {
+  const tightenBy = Math.floor(state.score / 5);
+
+  return {
+    perfect: Math.max(4, 10 - tightenBy),
+    solid: Math.max(12, 25 - tightenBy * 2),
+    close: Math.max(20, 40 - tightenBy * 2),
+  };
+};
+
 const messageFromError = (errorDeg) => {
-  if (errorDeg <= 10) return { text: `Perfect! ${errorDeg.toFixed(1)}° error. +3`, cls: 'feedback-good' };
-  if (errorDeg <= 25) return { text: `Solid pull. ${errorDeg.toFixed(1)}° error. +2`, cls: 'feedback-good' };
-  if (errorDeg <= 40) return { text: `Close! ${errorDeg.toFixed(1)}° error. +1`, cls: 'feedback-okay' };
+  const { perfect, solid, close } = getErrorThresholds();
+
+  if (errorDeg <= perfect) return { text: `Perfect! ${errorDeg.toFixed(1)}° error. +3`, cls: 'feedback-good' };
+  if (errorDeg <= solid) return { text: `Solid pull. ${errorDeg.toFixed(1)}° error. +2`, cls: 'feedback-good' };
+  if (errorDeg <= close) return { text: `Close! ${errorDeg.toFixed(1)}° error. +1`, cls: 'feedback-okay' };
   return { text: `Missed by ${errorDeg.toFixed(1)}°. Pull more opposite next time.`, cls: 'feedback-bad' };
 };
 
