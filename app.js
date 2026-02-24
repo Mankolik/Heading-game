@@ -13,6 +13,7 @@ const state = {
   dragging: false,
   maxPull: 110,
   returnAnimationFrame: null,
+  nextRoundTimeout: null,
   lockedRotation: null,
 };
 
@@ -54,6 +55,13 @@ const stopReturnAnimation = () => {
   if (state.returnAnimationFrame) {
     cancelAnimationFrame(state.returnAnimationFrame);
     state.returnAnimationFrame = null;
+  }
+};
+
+const clearNextRoundTimeout = () => {
+  if (state.nextRoundTimeout) {
+    clearTimeout(state.nextRoundTimeout);
+    state.nextRoundTimeout = null;
   }
 };
 
@@ -118,6 +126,7 @@ const updateStats = () => {
 };
 
 const startRound = ({ keepRound = false } = {}) => {
+  clearNextRoundTimeout();
   if (!keepRound) state.round += 1;
   setHeading();
   resetAircraft();
@@ -194,6 +203,10 @@ const finishPull = (dx, dy, length) => {
   feedback.textContent = `${result.text} (Target pull: ${expectedPullBearing.toFixed(0)}°)`;
   updateStats();
 
+  state.nextRoundTimeout = setTimeout(() => {
+    startRound();
+  }, 3000);
+
 };
 
 let lastPull = { dx: 0, dy: 0, length: 0 };
@@ -213,6 +226,7 @@ const pointerUp = (event) => {
 };
 
 aircraft.addEventListener('pointerdown', (event) => {
+  if (state.nextRoundTimeout) startRound();
   state.dragging = true;
   state.lockedRotation = null;
   stopReturnAnimation();
