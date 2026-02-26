@@ -5,6 +5,8 @@ const vector = document.getElementById('vector');
 const feedback = document.getElementById('feedback');
 const livesElement = document.getElementById('lives');
 const stats = document.getElementById('stats');
+const scoreValue = document.getElementById('scoreValue');
+const personalBestValue = document.getElementById('personalBestValue');
 const nextRoundButton = document.getElementById('nextRound');
 
 const state = {
@@ -18,12 +20,38 @@ const state = {
   nextRoundTimeout: null,
   lockedRotation: null,
   isGameOver: false,
+  personalBest: 0,
 };
 
 const springConfig = {
   stiffness: 0.24,
   damping: 0.82,
   jitterCutoff: 0.12,
+};
+
+const PERSONAL_BEST_STORAGE_KEY = 'headingSlingshotPersonalBest';
+
+const loadPersonalBest = () => {
+  const stored = Number(localStorage.getItem(PERSONAL_BEST_STORAGE_KEY));
+  state.personalBest = Number.isFinite(stored) && stored > 0 ? stored : 0;
+};
+
+const savePersonalBest = () => {
+  localStorage.setItem(PERSONAL_BEST_STORAGE_KEY, String(state.personalBest));
+};
+
+const updateScoreHud = () => {
+  scoreValue.textContent = String(state.score);
+  personalBestValue.textContent = String(state.personalBest);
+};
+
+const updatePersonalBest = () => {
+  if (state.score > state.personalBest) {
+    state.personalBest = state.score;
+    savePersonalBest();
+  }
+
+  updateScoreHud();
 };
 
 const center = () => {
@@ -132,6 +160,7 @@ const setGameOver = () => {
   setFeedbackClass('feedback-bad');
   feedback.textContent = 'Out of lives. Press "Play Again" to restart.';
   nextRoundButton.textContent = 'Play Again';
+  updatePersonalBest();
   updateStats();
 };
 
@@ -146,6 +175,7 @@ const restartGame = () => {
   resetAircraft();
   setFeedbackClass('');
   feedback.textContent = 'Drag the plane opposite the heading and release.';
+  updateScoreHud();
   updateStats();
 };
 
@@ -154,7 +184,7 @@ const updateStats = () => {
   const scoringText = solidEnabled
     ? `+3 ≤ ${perfect}°, +2 ≤ ${solid}°`
     : `+3 ≤ ${perfect}°`;
-  stats.textContent = `Score: ${state.score} | Round: ${state.round} | Lives: ${state.lives} | ${scoringText}`;
+  stats.textContent = `Round: ${state.round} | Lives: ${state.lives} | ${scoringText}`;
 };
 
 const startRound = ({ keepRound = false } = {}) => {
@@ -230,6 +260,7 @@ const finishPull = (dx, dy, length) => {
   const error = minimalAngleDiff(pullBearing, expectedPullBearing);
   const points = pointsFromError(error);
   state.score += points;
+  updatePersonalBest();
 
   if (points === 0) {
     state.lives = Math.max(0, state.lives - 1);
@@ -291,6 +322,8 @@ nextRoundButton.addEventListener('click', () => {
   startRound();
 });
 
+loadPersonalBest();
 setHeading();
 updateLives();
+updateScoreHud();
 updateStats();
