@@ -3,6 +3,7 @@ const playfield = document.getElementById('playfield');
 const aircraft = document.getElementById('aircraft');
 const vector = document.getElementById('vector');
 const feedback = document.getElementById('feedback');
+const livesElement = document.getElementById('lives');
 const stats = document.getElementById('stats');
 const nextRoundButton = document.getElementById('nextRound');
 
@@ -10,11 +11,13 @@ const state = {
   targetHeading: 0,
   score: 0,
   round: 1,
+  lives: 3,
   dragging: false,
   maxPull: 110,
   returnAnimationFrame: null,
   nextRoundTimeout: null,
   lockedRotation: null,
+  isGameOver: false,
 };
 
 const springConfig = {
@@ -117,15 +120,45 @@ const setFeedbackClass = (name) => {
   if (name) feedback.classList.add(name);
 };
 
+const updateLives = () => {
+  const heart = '❤️';
+  const emptyHeart = '🖤';
+  livesElement.textContent = `${heart.repeat(state.lives)}${emptyHeart.repeat(3 - state.lives)}`;
+};
+
+const setGameOver = () => {
+  state.isGameOver = true;
+  clearNextRoundTimeout();
+  setFeedbackClass('feedback-bad');
+  feedback.textContent = 'Out of lives. Press "Play Again" to restart.';
+  nextRoundButton.textContent = 'Play Again';
+  updateStats();
+};
+
+const restartGame = () => {
+  state.score = 0;
+  state.round = 1;
+  state.lives = 3;
+  state.isGameOver = false;
+  nextRoundButton.textContent = 'Skip / New Heading';
+  updateLives();
+  setHeading();
+  resetAircraft();
+  setFeedbackClass('');
+  feedback.textContent = 'Drag the plane opposite the heading and release.';
+  updateStats();
+};
+
 const updateStats = () => {
   const { perfect, solidEnabled, solid } = getErrorThresholds();
   const scoringText = solidEnabled
     ? `+3 ≤ ${perfect}°, +2 ≤ ${solid}°`
     : `+3 ≤ ${perfect}°`;
-  stats.textContent = `Score: ${state.score} | Round: ${state.round} | ${scoringText}`;
+  stats.textContent = `Score: ${state.score} | Round: ${state.round} | Lives: ${state.lives} | ${scoringText}`;
 };
 
 const startRound = ({ keepRound = false } = {}) => {
+  if (state.isGameOver) return;
   clearNextRoundTimeout();
   if (!keepRound) state.round += 1;
   setHeading();
@@ -198,10 +231,20 @@ const finishPull = (dx, dy, length) => {
   const points = pointsFromError(error);
   state.score += points;
 
+  if (points === 0) {
+    state.lives = Math.max(0, state.lives - 1);
+    updateLives();
+  }
+
   const result = messageFromError(error);
   setFeedbackClass(result.cls);
   feedback.textContent = `${result.text} (Target pull: ${expectedPullBearing.toFixed(0)}°)`;
   updateStats();
+
+  if (state.lives === 0) {
+    setGameOver();
+    return;
+  }
 
   state.nextRoundTimeout = setTimeout(() => {
     startRound();
@@ -226,6 +269,7 @@ const pointerUp = (event) => {
 };
 
 aircraft.addEventListener('pointerdown', (event) => {
+  if (state.isGameOver) return;
   if (state.nextRoundTimeout) startRound();
   state.dragging = true;
   state.lockedRotation = null;
@@ -238,7 +282,15 @@ aircraft.addEventListener('pointermove', pointerMove);
 aircraft.addEventListener('pointerup', pointerUp);
 aircraft.addEventListener('pointercancel', pointerUp);
 
-nextRoundButton.addEventListener('click', () => startRound());
+nextRoundButton.addEventListener('click', () => {
+  if (state.isGameOver) {
+    restartGame();
+    return;
+  }
+
+  startRound();
+});
 
 setHeading();
+updateLives();
 updateStats();
