@@ -17,8 +17,18 @@
       <p class="subtitle">Pull opposite the target heading and release.</p>
 
       <section class="hud" aria-label="Round details">
-        <p class="heading-label">Target Heading</p>
-        <p id="targetHeading" class="heading-value">000°</p>
+        <div class="hud-score" aria-label="Current score">
+          <p class="heading-label">Score</p>
+          <p id="scoreValue" class="heading-value">0</p>
+        </div>
+        <div class="hud-target">
+          <p class="heading-label">Target Heading</p>
+          <p id="targetHeading" class="heading-value">000°</p>
+        </div>
+        <div class="hud-score" aria-label="Personal best score">
+          <p class="heading-label">Personal Best</p>
+          <p id="personalBestValue" class="heading-value">0</p>
+        </div>
       </section>
 
       <section class="playfield-wrap">
@@ -33,7 +43,7 @@
 
       <section class="status" aria-live="polite">
         <p id="feedback">Drag the plane opposite the heading and release.</p>
-        <p id="stats">Score: 0 | Round: 1</p>
+        <p id="stats">Round: 1</p>
       </section>
 
       <div class="actions">
