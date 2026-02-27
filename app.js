@@ -220,8 +220,14 @@ const getErrorThresholds = () => {
 const messageFromError = (errorDeg, guessedBearing, expectedPullBearing) => {
   const { perfect, solidEnabled, solid } = getErrorThresholds();
 
-  if (errorDeg <= perfect) return { text: `Perfect! ${errorDeg.toFixed(1)}° error. +3`, cls: 'feedback-good' };
-  if (solidEnabled && errorDeg <= solid) return { text: `Solid pull. ${errorDeg.toFixed(1)}° error. +2`, cls: 'feedback-good' };
+  if (errorDeg <= perfect) return {
+    text: `Perfect! You pulled ${guessedBearing.toFixed(1)}° (${errorDeg.toFixed(1)}° off). +3`,
+    cls: 'feedback-good'
+  };
+  if (solidEnabled && errorDeg <= solid) return {
+    text: `Solid pull at ${guessedBearing.toFixed(1)}°. Just ${errorDeg.toFixed(1)}° off. +2`,
+    cls: 'feedback-good'
+  };
   return {
     text: `You guessed ${guessedBearing.toFixed(1)}°. Missed by ${errorDeg.toFixed(1)}°. Target was ${expectedPullBearing.toFixed(0)}°.`,
     cls: 'feedback-bad'
