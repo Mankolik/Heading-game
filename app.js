@@ -223,7 +223,7 @@ const messageFromError = (errorDeg, guessedBearing, expectedPullBearing) => {
   if (errorDeg <= perfect) return { text: `Perfect! ${errorDeg.toFixed(1)}° error. +3`, cls: 'feedback-good' };
   if (solidEnabled && errorDeg <= solid) return { text: `Solid pull. ${errorDeg.toFixed(1)}° error. +2`, cls: 'feedback-good' };
   return {
-    text: `You guessed ${guessedBearing.toFixed(0)}°. Missed by ${errorDeg.toFixed(1)}°. Target was ${expectedPullBearing.toFixed(0)}°.`,
+    text: `You guessed ${guessedBearing.toFixed(1)}°. Missed by ${errorDeg.toFixed(1)}°. Target was ${expectedPullBearing.toFixed(0)}°.`,
     cls: 'feedback-bad'
   };
 };
